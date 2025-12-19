@@ -51,8 +51,8 @@ http://localhost:5000
 1. Click **"Mode B"** button
 2. Click **"Start New Game"**
 3. Click any **empty cell** to place your stone (green)
-4. ZidanAI responds automatically (blue)
-5. Repeat until game ends
+4. **ZidanAI automatically responds** with its quantum-powered move (blue)
+5. Repeat until game ends (both moves happen in one request)
 
 ## 🔍 Understanding the Output
 

@@ -173,6 +173,20 @@ class GameState:
         score = territory * 2 + liberties + connectivity * 3
         return score
     
+    def get_score_breakdown(self, player):
+        """Get detailed score breakdown for player."""
+        territory = self.count_territory(player)
+        liberties = self.count_total_liberties(player)
+        connectivity = self.count_connectivity(player)
+        total = territory * 2 + liberties + connectivity * 3
+        
+        return {
+            'territory': territory,
+            'liberties': liberties,
+            'connectivity': connectivity,
+            'total': total
+        }
+    
     def check_game_over(self):
         """Check if game should end."""
         if self.turn_count >= self.max_turns:
@@ -181,6 +195,12 @@ class GameState:
             return True
         
         if self.consecutive_passes >= 2:
+            self.game_over = True
+            self.determine_winner()
+            return True
+        
+        # Check if board is full (no legal moves)
+        if len(self.get_legal_moves()) == 0:
             self.game_over = True
             self.determine_winner()
             return True

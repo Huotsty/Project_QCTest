@@ -96,28 +96,40 @@ def play_turn():
             # Apply human move
             game.apply_move(row, col, HUMAN)
             
+            # Calculate scores after move
+            opponent = ZIDAN_AI
+            human_score = game.get_score_breakdown(HUMAN)
+            ai_score = game.get_score_breakdown(opponent)
+            
             log_entry = {
                 'turn': game.turn_count + 1,
                 'player': 'Human',
                 'move': f'({row}, {col})',
                 'rationale': 'Human player move',
-                'board': game.print_board()
+                'board': game.print_board(),
+                'scores': {
+                    'Human': human_score,
+                    'ZidanAI': ai_score
+                }
             }
             game.game_log.append(log_entry)
             
             game.next_turn()
             
-            # Check game over
+            # Check game over after human move
             if game.check_game_over():
                 return jsonify({
                     'board': game.board,
                     'current_player': None,
                     'game_log': game.game_log,
                     'game_over': True,
-                    'winner': game.winner
+                    'winner': game.winner,
+                    'turn_count': game.turn_count
                 })
+            
+            # Continue to ZidanAI's turn automatically (don't return yet)
         
-        # AI turn
+        # AI turn (executes for Mode A always, and for Mode B after human move)
         if game.current_player == ZIDAN_AI:
             # ZidanAI move
             zidan = ZidanAI(game)
@@ -139,6 +151,16 @@ def play_turn():
                 # Apply move
                 game.apply_move(row, col, ZIDAN_AI)
                 
+                # Calculate scores after move
+                if game.mode == 'A':
+                    player1_score = game.get_score_breakdown(ZIDAN_AI)
+                    player2_score = game.get_score_breakdown(RULES_AI)
+                    scores = {'ZidanAI': player1_score, 'RuleBasedAI': player2_score}
+                else:
+                    player1_score = game.get_score_breakdown(HUMAN)
+                    player2_score = game.get_score_breakdown(ZIDAN_AI)
+                    scores = {'Human': player1_score, 'ZidanAI': player2_score}
+                
                 log_entry = {
                     'turn': game.turn_count + 1,
                     'player': 'ZidanAI',
@@ -151,7 +173,8 @@ def play_turn():
                     'bell_counts': result['bell_counts'],
                     'circuit_image': result['circuit_image'],
                     'histogram_image': result['histogram_image'],
-                    'board': game.print_board()
+                    'board': game.print_board(),
+                    'scores': scores
                 }
             
             game.game_log.append(log_entry)
@@ -176,12 +199,20 @@ def play_turn():
                 # Apply move
                 game.apply_move(row, col, RULES_AI)
                 
+                # Calculate scores after move
+                player1_score = game.get_score_breakdown(ZIDAN_AI)
+                player2_score = game.get_score_breakdown(RULES_AI)
+                
                 log_entry = {
                     'turn': game.turn_count + 1,
                     'player': 'RuleBasedAI',
                     'move': f'({row}, {col})',
                     'rationale': rationale,
-                    'board': game.print_board()
+                    'board': game.print_board(),
+                    'scores': {
+                        'ZidanAI': player1_score,
+                        'RuleBasedAI': player2_score
+                    }
                 }
             
             game.game_log.append(log_entry)
@@ -190,13 +221,30 @@ def play_turn():
         # Check game over
         game.check_game_over()
         
+        # Calculate current scores
+        if game.mode == 'A':
+            player1_scores = game.get_score_breakdown(ZIDAN_AI)
+            player2_scores = game.get_score_breakdown(RULES_AI)
+            scores = {
+                'ZidanAI': player1_scores,
+                'RuleBasedAI': player2_scores
+            }
+        else:  # Mode B
+            player1_scores = game.get_score_breakdown(HUMAN)
+            player2_scores = game.get_score_breakdown(ZIDAN_AI)
+            scores = {
+                'Human': player1_scores,
+                'ZidanAI': player2_scores
+            }
+        
         response = {
             'board': game.board,
             'current_player': game.get_player_name(game.current_player) if not game.game_over else None,
             'game_log': game.game_log,
             'game_over': game.game_over,
             'winner': game.winner if game.game_over else None,
-            'turn_count': game.turn_count
+            'turn_count': game.turn_count,
+            'scores': scores
         }
         
         return jsonify(response)

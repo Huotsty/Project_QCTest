@@ -344,6 +344,14 @@
                         <div><strong>Status:</strong> <span id="gameStatus">Waiting to start</span></div>
                     </div>
                 </div>
+                
+                <div class="status-panel" style="margin-top: 20px;">
+                    <h3>Current Scores</h3>
+                    <div class="status-info" id="scoreDisplay">
+                        <div>Scores will appear here...</div>
+                    </div>
+                </div>
+            </div>
             </div>
             
             <!-- Game Board -->
@@ -500,41 +508,14 @@
                 updateLog(data.game_log);
                 updateStatus(data);
                 
-                if (!data.game_over && data.current_player === 'ZidanAI') {
-                    // Auto-play ZidanAI response
-                    setTimeout(playAITurn, 1000);
-                }
+                // Backend automatically plays ZidanAI after human move
+                // No need for separate API call
                 
                 if (data.game_over) {
                     gameOver = true;
                 }
             } catch (error) {
                 alert('Error processing move: ' + error);
-            }
-        }
-        
-        // Auto-play AI turn in Mode B
-        async function playAITurn() {
-            document.getElementById('gameStatus').innerHTML = 'ZidanAI thinking...<span class="loading"></span>';
-            
-            try {
-                const response = await fetch('/play', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({})
-                });
-                
-                const data = await response.json();
-                
-                updateBoard(data.board);
-                updateLog(data.game_log);
-                updateStatus(data);
-                
-                if (data.game_over) {
-                    gameOver = true;
-                }
-            } catch (error) {
-                alert('Error: ' + error);
             }
         }
         
@@ -628,6 +609,21 @@
                     }
                 }
                 
+                // Scores after move
+                if (entry.scores) {
+                    html += `<div style="background: #f0f8ff; padding: 10px; margin-top: 10px; border-radius: 5px;">`;
+                    html += `<div><strong>📊 Scores After Move:</strong></div>`;
+                    for (const [player, scoreData] of Object.entries(entry.scores)) {
+                        html += `<div style="margin-top: 5px;"><strong>${player}:</strong> ${scoreData.total} points</div>`;
+                        html += `<div style="font-size: 0.85em; margin-left: 10px;">`;
+                        html += `Territory: ${scoreData.territory}×2=${scoreData.territory*2}, `;
+                        html += `Liberties: ${scoreData.liberties}, `;
+                        html += `Connectivity: ${scoreData.connectivity}×3=${scoreData.connectivity*3}`;
+                        html += `</div>`;
+                    }
+                    html += `</div>`;
+                }
+                
                 // Board snapshot
                 if (entry.board) {
                     html += `<div class="board-snapshot">${entry.board}</div>`;
@@ -648,6 +644,23 @@
             document.getElementById('turnCount').textContent = data.turn_count || 0;
             document.getElementById('currentPlayer').textContent = data.current_player || '-';
             currentPlayer = data.current_player;
+            
+            // Update scores display
+            if (data.scores) {
+                const scoreDiv = document.getElementById('scoreDisplay');
+                let scoreHtml = '';
+                for (const [player, scoreData] of Object.entries(data.scores)) {
+                    const color = player === 'ZidanAI' ? '#4a90e2' : (player === 'Human' ? '#2ecc71' : '#e74c3c');
+                    scoreHtml += `<div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 5px; border-left: 4px solid ${color};">`;
+                    scoreHtml += `<div style="font-weight: bold; color: ${color};">${player}: ${scoreData.total} points</div>`;
+                    scoreHtml += `<div style="font-size: 0.85em; margin-top: 3px;">`;
+                    scoreHtml += `T: ${scoreData.territory}×2=${scoreData.territory*2} | `;
+                    scoreHtml += `L: ${scoreData.liberties} | `;
+                    scoreHtml += `C: ${scoreData.connectivity}×3=${scoreData.connectivity*3}`;
+                    scoreHtml += `</div></div>`;
+                }
+                scoreDiv.innerHTML = scoreHtml;
+            }
             
             if (data.game_over) {
                 document.getElementById('gameStatus').innerHTML = 

@@ -4,6 +4,12 @@
 
 All components have been successfully implemented and tested.
 
+**UPDATE:** Mode B (Human vs ZidanAI) has been optimized:
+- ✅ Single API call now handles both human and AI moves
+- ✅ ZidanAI automatically responds after each human move
+- ✅ Faster, cleaner, more efficient implementation
+- ✅ All tests passing (see test_mode_b.py)
+
 ## 📦 Deliverables Summary
 
 ### Core Application (5 files)
