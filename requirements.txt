@@ -1,0 +1,13 @@
+flask
+qiskit
+qiskit-aer
+qiskit-ibm-runtime
+mitiq
+pylatexenc
+matplotlib
+
+qiskit_aer
+qiskit 
+qiskit-aer
+qiskit_ibm_runtime
+qiskit-ibm-runtime
