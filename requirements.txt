@@ -5,7 +5,6 @@ qiskit-ibm-runtime
 mitiq
 pylatexenc
 matplotlib
-
 qiskit_aer
 qiskit 
 qiskit-aer
