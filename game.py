@@ -68,10 +68,54 @@ class GameState:
             return False
         return self.board[row][col] == EMPTY
     
+    def is_suicide(self, row, col, player):
+        """Check if placing a stone would be suicide.
+        Returns True if the move is suicide (illegal), False otherwise.
+        A move is suicide if after placement and captures, the placed stone's group has 0 liberties.
+        Exception: if the move captures opponent stones, it's legal.
+        """
+        # Temporarily place the stone
+        self.board[row][col] = player
+        
+        # Check for opponent captures
+        opponents = [p for p in [ZIDAN_AI, RULES_AI, HUMAN] if p != player and p != EMPTY]
+        has_captures = False
+        
+        for r in range(BOARD_SIZE):
+            for c in range(BOARD_SIZE):
+                if self.board[r][c] in opponents:
+                    liberties = self.get_group_liberties(r, c)
+                    if liberties == 0:
+                        has_captures = True
+                        break
+            if has_captures:
+                break
+        
+        # If we capture opponent stones, the move is legal
+        if has_captures:
+            self.board[row][col] = EMPTY
+            return False
+        
+        # Check if our own group has liberties
+        own_liberties = self.get_group_liberties(row, col)
+        
+        # Undo the temporary placement
+        self.board[row][col] = EMPTY
+        
+        # If own group has no liberties and we don't capture, it's suicide
+        return own_liberties == 0
+    
     def apply_move(self, row, col, player):
-        """Apply move to board. Returns True if successful, False if illegal."""
+        """Apply move to board. Returns True if successful, False if illegal.
+        Returns False for: out of bounds, occupied, or suicide moves.
+        """
         if not self.is_legal(row, col):
             return False
+        
+        # Check suicide rule
+        if self.is_suicide(row, col, player):
+            return False
+        
         self.board[row][col] = player
         self.consecutive_passes = 0
         
@@ -79,6 +123,29 @@ class GameState:
         captures = self.check_captures(player)
         
         return True
+    
+    def try_move(self, row, col, player):
+        """Try to apply a move and return detailed result.
+        Returns: (success: bool, captures: list, is_suicide: bool, message: str)
+        """
+        if not (0 <= row < BOARD_SIZE and 0 <= col < BOARD_SIZE):
+            return False, [], False, "Move out of bounds"
+        
+        if self.board[row][col] != EMPTY:
+            return False, [], False, "Position already occupied"
+        
+        # Check suicide
+        if self.is_suicide(row, col, player):
+            return False, [], True, f"Illegal move: suicide at ({row},{col})"
+        
+        # Apply the move
+        self.board[row][col] = player
+        self.consecutive_passes = 0
+        
+        # Check for captures
+        captures = self.check_captures(player)
+        
+        return True, captures, False, "Move successful"
     
     def get_group_liberties(self, row, col):
         """Get liberty count for a stone's group."""

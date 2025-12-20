@@ -90,14 +90,26 @@ def play_turn():
             if row is None or col is None:
                 return jsonify({'error': 'Row and col required for human move'}), 400
             
-            if not game.is_legal(row, col):
-                return jsonify({'error': 'Illegal move'}), 400
+            # Try to apply move with suicide checking
+            success, captured, is_suicide, message = game.try_move(row, col, HUMAN)
             
-            # Apply human move
-            success = game.apply_move(row, col, HUMAN)
-            
-            # Check for captures
-            captured = game.check_captures(HUMAN)
+            if not success:
+                if is_suicide:
+                    # Log suicide attempt
+                    log_entry = {
+                        'turn': game.turn_count,
+                        'player': 'Human',
+                        'message': message,
+                        'suicideRejected': True
+                    }
+                    game.game_log.append(log_entry)
+                
+                return jsonify({
+                    'error': message,
+                    'suicideRejected': is_suicide,
+                    'board': game.board,
+                    'game_log': game.game_log
+                }), 400
             
             # Calculate scores after move
             opponent = ZIDAN_AI
@@ -265,6 +277,166 @@ def play_turn():
         import traceback
         return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 500
 
+@app.route('/ai-step', methods=['POST'])
+def ai_step():
+    """Execute exactly one AI move in Mode A (AI vs AI).
+    Advances the game by one move, respecting passes, captures, and suicide.
+    """
+    try:
+        game_id = session.get('game_id')
+        
+        if game_id not in games:
+            return jsonify({'error': 'Game not found'}), 404
+        
+        game = games[game_id]
+        
+        if game.mode != 'A':
+            return jsonify({'error': 'AI step only available in Mode A'}), 400
+        
+        if game.game_over:
+            return jsonify({
+                'error': 'Game already over',
+                'winner': game.winner,
+                'board': game.board,
+                'game_over': True
+            }), 400
+        
+        current_ai = game.get_player_name(game.current_player)
+        
+        # Execute one AI move
+        if game.current_player == ZIDAN_AI:
+            zidan = ZidanAI(game)
+            result = zidan.choose_move()
+            row, col = result['row'], result['col']
+            
+            if row is None:
+                # Pass
+                game.pass_turn()
+                log_entry = {
+                    'turn': game.turn_count + 1,
+                    'player': 'ZidanAI',
+                    'move': 'Pass',
+                    'message': 'No legal moves available',
+                    'rationale': result['rationale'],
+                    'board': game.print_board(),
+                    'captures': []
+                }
+            else:
+                # Try move with suicide checking
+                success, captured, is_suicide, message = game.try_move(row, col, ZIDAN_AI)
+                
+                if not success:
+                    # Retry with pass if suicide
+                    game.pass_turn()
+                    log_entry = {
+                        'turn': game.turn_count + 1,
+                        'player': 'ZidanAI',
+                        'move': 'Pass',
+                        'message': f'Attempted suicide move rejected: {message}',
+                        'rationale': result['rationale'],
+                        'board': game.print_board(),
+                        'suicideRejected': True,
+                        'captures': []
+                    }
+                else:
+                    player1_score = game.get_score_breakdown(ZIDAN_AI)
+                    player2_score = game.get_score_breakdown(RULES_AI)
+                    
+                    log_entry = {
+                        'turn': game.turn_count + 1,
+                        'player': 'ZidanAI',
+                        'move': f'({row}, {col})',
+                        'rationale': result['rationale'],
+                        'features': result['features'],
+                        'classification': result['classification'],
+                        'confidence': f"{result['confidence']:.1f}%",
+                        'entanglement_score': f"{result['entanglement_score']:.3f}",
+                        'bell_counts': result['bell_counts'],
+                        'circuit_image': result['circuit_image'],
+                        'histogram_image': result['histogram_image'],
+                        'board': game.print_board(),
+                        'scores': {'ZidanAI': player1_score, 'RuleBasedAI': player2_score},
+                        'captures': captured
+                    }
+            
+            game.game_log.append(log_entry)
+            game.next_turn()
+            
+        elif game.current_player == RULES_AI:
+            rules = RuleBasedAI(game)
+            row, col, rationale = rules.choose_move()
+            
+            if row is None:
+                # Pass
+                game.pass_turn()
+                log_entry = {
+                    'turn': game.turn_count + 1,
+                    'player': 'RuleBasedAI',
+                    'move': 'Pass',
+                    'message': 'No legal moves available',
+                    'rationale': rationale,
+                    'board': game.print_board(),
+                    'captures': []
+                }
+            else:
+                # Try move with suicide checking
+                success, captured, is_suicide, message = game.try_move(row, col, RULES_AI)
+                
+                if not success:
+                    # Pass if suicide
+                    game.pass_turn()
+                    log_entry = {
+                        'turn': game.turn_count + 1,
+                        'player': 'RuleBasedAI',
+                        'move': 'Pass',
+                        'message': f'Attempted suicide move rejected: {message}',
+                        'rationale': rationale,
+                        'board': game.print_board(),
+                        'suicideRejected': True,
+                        'captures': []
+                    }
+                else:
+                    player1_score = game.get_score_breakdown(ZIDAN_AI)
+                    player2_score = game.get_score_breakdown(RULES_AI)
+                    
+                    log_entry = {
+                        'turn': game.turn_count + 1,
+                        'player': 'RuleBasedAI',
+                        'move': f'({row}, {col})',
+                        'rationale': rationale,
+                        'board': game.print_board(),
+                        'scores': {'ZidanAI': player1_score, 'RuleBasedAI': player2_score},
+                        'captures': captured
+                    }
+            
+            game.game_log.append(log_entry)
+            game.next_turn()
+        
+        # Check game over
+        game.check_game_over()
+        
+        # Calculate final scores
+        player1_scores = game.get_score_breakdown(ZIDAN_AI)
+        player2_scores = game.get_score_breakdown(RULES_AI)
+        scores = {'ZidanAI': player1_scores, 'RuleBasedAI': player2_scores}
+        
+        response = {
+            'board': game.board,
+            'current_player': game.get_player_name(game.current_player) if not game.game_over else None,
+            'game_log': game.game_log,
+            'game_over': game.game_over,
+            'winner': game.winner if game.game_over else None,
+            'turn_count': game.turn_count,
+            'scores': scores,
+            'message': f'{current_ai} completed move'
+        }
+        
+        return jsonify(response)
+    
+    except Exception as e:
+        import traceback
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 500
+
 @app.route('/get_state', methods=['GET'])
 def get_state():
     """Get current game state."""
@@ -276,6 +448,18 @@ def get_state():
         
         game = games[game_id]
         
+        # Calculate scores
+        if game.mode == 'A':
+            scores = {
+                'ZidanAI': game.get_score_breakdown(ZIDAN_AI),
+                'RuleBasedAI': game.get_score_breakdown(RULES_AI)
+            }
+        else:
+            scores = {
+                'Human': game.get_score_breakdown(HUMAN),
+                'ZidanAI': game.get_score_breakdown(ZIDAN_AI)
+            }
+        
         response = {
             'board': game.board,
             'current_player': game.get_player_name(game.current_player) if not game.game_over else None,
@@ -283,7 +467,8 @@ def get_state():
             'game_over': game.game_over,
             'winner': game.winner if game.game_over else None,
             'turn_count': game.turn_count,
-            'mode': game.mode
+            'mode': game.mode,
+            'scores': scores
         }
         
         return jsonify(response)
