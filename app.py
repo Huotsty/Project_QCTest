@@ -94,7 +94,10 @@ def play_turn():
                 return jsonify({'error': 'Illegal move'}), 400
             
             # Apply human move
-            game.apply_move(row, col, HUMAN)
+            success = game.apply_move(row, col, HUMAN)
+            
+            # Check for captures
+            captured = game.check_captures(HUMAN)
             
             # Calculate scores after move
             opponent = ZIDAN_AI
@@ -110,7 +113,8 @@ def play_turn():
                 'scores': {
                     'Human': human_score,
                     'ZidanAI': ai_score
-                }
+                },
+                'captures': captured if captured else []
             }
             game.game_log.append(log_entry)
             
@@ -151,6 +155,9 @@ def play_turn():
                 # Apply move
                 game.apply_move(row, col, ZIDAN_AI)
                 
+                # Check for captures
+                captured = game.check_captures(ZIDAN_AI)
+                
                 # Calculate scores after move
                 if game.mode == 'A':
                     player1_score = game.get_score_breakdown(ZIDAN_AI)
@@ -174,7 +181,8 @@ def play_turn():
                     'circuit_image': result['circuit_image'],
                     'histogram_image': result['histogram_image'],
                     'board': game.print_board(),
-                    'scores': scores
+                    'scores': scores,
+                    'captures': captured if captured else []
                 }
             
             game.game_log.append(log_entry)
@@ -199,6 +207,9 @@ def play_turn():
                 # Apply move
                 game.apply_move(row, col, RULES_AI)
                 
+                # Check for captures
+                captured = game.check_captures(RULES_AI)
+                
                 # Calculate scores after move
                 player1_score = game.get_score_breakdown(ZIDAN_AI)
                 player2_score = game.get_score_breakdown(RULES_AI)
@@ -212,7 +223,8 @@ def play_turn():
                     'scores': {
                         'ZidanAI': player1_score,
                         'RuleBasedAI': player2_score
-                    }
+                    },
+                    'captures': captured if captured else []
                 }
             
             game.game_log.append(log_entry)

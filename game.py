@@ -74,7 +74,55 @@ class GameState:
             return False
         self.board[row][col] = player
         self.consecutive_passes = 0
+        
+        # Check for captures after move
+        captures = self.check_captures(player)
+        
         return True
+    
+    def get_group_liberties(self, row, col):
+        """Get liberty count for a stone's group."""
+        if self.board[row][col] == EMPTY:
+            return 0
+        
+        player = self.board[row][col]
+        group = self.get_group(row, col, player)
+        liberties = set()
+        
+        for gr, gc in group:
+            for nr, nc in self.get_neighbors(gr, gc):
+                if self.board[nr][nc] == EMPTY:
+                    liberties.add((nr, nc))
+        
+        return len(liberties)
+    
+    def check_captures(self, current_player):
+        """Check and remove captured opponent groups. Returns list of captured positions."""
+        captured_positions = []
+        opponents = [p for p in [ZIDAN_AI, RULES_AI, HUMAN] if p != current_player and p != EMPTY]
+        
+        checked = set()
+        for r in range(BOARD_SIZE):
+            for c in range(BOARD_SIZE):
+                if self.board[r][c] in opponents and (r, c) not in checked:
+                    group = self.get_group(r, c, self.board[r][c])
+                    for pos in group:
+                        checked.add(pos)
+                    
+                    # Count liberties for this group
+                    liberties = set()
+                    for gr, gc in group:
+                        for nr, nc in self.get_neighbors(gr, gc):
+                            if self.board[nr][nc] == EMPTY:
+                                liberties.add((nr, nc))
+                    
+                    # Capture if no liberties
+                    if len(liberties) == 0:
+                        for gr, gc in group:
+                            self.board[gr][gc] = EMPTY
+                            captured_positions.append((gr, gc))
+        
+        return captured_positions
     
     def pass_turn(self):
         """Record a pass."""

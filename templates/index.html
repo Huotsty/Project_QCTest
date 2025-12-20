@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Go - ZidanAI vs RuleBasedAI/Human</title>
+    <title>Quantum Go - ZidanAI</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -30,61 +30,63 @@
         header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 30px;
+            padding: 25px 30px;
             text-align: center;
         }
         
         header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.2em;
+            margin-bottom: 8px;
         }
         
         header p {
-            font-size: 1.1em;
-            opacity: 0.9;
+            font-size: 1em;
+            opacity: 0.95;
         }
         
-        .main-content {
+        .main-layout {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: 280px 1fr 320px;
             gap: 20px;
-            padding: 30px;
+            padding: 25px;
+            min-height: 600px;
         }
         
-        .control-panel {
+        /* Left Panel - Controls */
+        .left-panel {
             background: #f8f9fa;
             padding: 20px;
             border-radius: 10px;
-        }
-        
-        .mode-selector {
-            margin-bottom: 20px;
+            height: fit-content;
         }
         
         .mode-selector h3 {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             color: #333;
+            font-size: 1.1em;
         }
         
         .mode-buttons {
             display: flex;
+            flex-direction: column;
             gap: 10px;
+            margin-bottom: 15px;
         }
         
         .btn {
-            padding: 12px 24px;
+            padding: 12px 20px;
             border: none;
             border-radius: 8px;
-            font-size: 1em;
+            font-size: 0.95em;
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 600;
         }
         
         .btn-mode {
-            flex: 1;
             background: #e0e0e0;
             color: #333;
+            text-align: left;
         }
         
         .btn-mode.active {
@@ -101,22 +103,10 @@
             background: #28a745;
             color: white;
             width: 100%;
-            margin-top: 10px;
         }
         
         .btn-primary:hover {
             background: #218838;
-        }
-        
-        .btn-secondary {
-            background: #007bff;
-            color: white;
-            width: 100%;
-            margin-top: 10px;
-        }
-        
-        .btn-secondary:hover {
-            background: #0056b3;
         }
         
         .status-panel {
@@ -130,94 +120,123 @@
         .status-panel h3 {
             margin-bottom: 10px;
             color: #667eea;
+            font-size: 1.05em;
         }
         
         .status-info {
-            font-size: 0.95em;
+            font-size: 0.9em;
             line-height: 1.8;
         }
         
+        /* Center - Go Board */
         .board-container {
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
         
-        .board-wrapper {
-            display: inline-block;
-            background: #dcb35c;
+        .board-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .go-board-wrapper {
+            background: linear-gradient(135deg, #d4a574 0%, #c89860 100%);
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border: 3px solid #8b6f47;
         }
         
-        .board {
-            display: grid;
-            grid-template-columns: repeat(5, 60px);
-            grid-template-rows: repeat(5, 60px);
-            gap: 2px;
-            background: #8b6f47;
-            border: 3px solid #654321;
-        }
-        
-        .cell {
+        #goBoard {
             background: #dcb35c;
-            border: 1px solid #8b6f47;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2em;
-            transition: all 0.2s;
-            position: relative;
+            cursor: crosshair;
         }
         
-        .cell:hover {
-            background: #e6c470;
+        /* Right Panel - Scores */
+        .right-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            height: fit-content;
         }
         
-        .cell.disabled {
-            cursor: not-allowed;
+        .score-panel {
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            padding: 15px;
         }
         
-        .stone {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .score-panel h3 {
+            margin-bottom: 12px;
+            color: #667eea;
+            font-size: 1.05em;
+        }
+        
+        .player-score {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+        
+        .player-score.black {
+            border-left-color: #333;
+        }
+        
+        .player-score.white {
+            border-left-color: #f0f0f0;
+            border-width: 4px;
+            border-style: solid;
+        }
+        
+        .player-name {
             font-weight: bold;
-            color: white;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+            font-size: 1em;
+            margin-bottom: 5px;
         }
         
-        .stone-zidan {
-            background: radial-gradient(circle at 30% 30%, #4a90e2, #2c5aa0);
+        .score-total {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 5px 0;
         }
         
-        .stone-rules {
-            background: radial-gradient(circle at 30% 30%, #e74c3c, #c0392b);
+        .score-breakdown {
+            font-size: 0.85em;
+            color: #666;
+            line-height: 1.5;
         }
         
-        .stone-human {
-            background: radial-gradient(circle at 30% 30%, #2ecc71, #27ae60);
-        }
-        
-        .log-panel {
+        /* Bottom - Game Log */
+        .log-section {
             grid-column: 1 / -1;
             background: #f8f9fa;
             padding: 20px;
             border-radius: 10px;
-            max-height: 600px;
-            overflow-y: auto;
+            margin-top: 10px;
         }
         
-        .log-panel h2 {
+        .log-section h2 {
             margin-bottom: 15px;
             color: #333;
         }
         
-        .log-entry {
+        .log-panel {
+            max-height: 500px;
+            overflow-y: auto;
             background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .log-entry {
+            background: #f8f9fa;
             padding: 15px;
             margin-bottom: 15px;
             border-radius: 8px;
@@ -225,23 +244,19 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
-        .log-entry.zidan {
-            border-left-color: #4a90e2;
+        .log-entry.black {
+            border-left-color: #333;
         }
         
-        .log-entry.rules {
-            border-left-color: #e74c3c;
-        }
-        
-        .log-entry.human {
-            border-left-color: #2ecc71;
+        .log-entry.white {
+            border-left-color: #999;
         }
         
         .log-header {
             font-weight: bold;
             color: #667eea;
             margin-bottom: 8px;
-            font-size: 1.1em;
+            font-size: 1.05em;
         }
         
         .log-details {
@@ -250,12 +265,23 @@
             color: #555;
         }
         
+        .capture-notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            color: #856404;
+            font-weight: 600;
+        }
+        
         .quantum-info {
             background: #e8f4f8;
-            padding: 10px;
+            padding: 12px;
             margin-top: 10px;
             border-radius: 5px;
             font-family: 'Courier New', monospace;
+            font-size: 0.85em;
         }
         
         .quantum-images {
@@ -277,7 +303,7 @@
             margin-top: 10px;
             border-radius: 5px;
             font-family: 'Courier New', monospace;
-            font-size: 0.85em;
+            font-size: 0.8em;
             white-space: pre;
         }
         
@@ -285,12 +311,12 @@
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
             padding: 20px;
-            margin: 20px 0;
+            margin: 15px 0;
             border-radius: 10px;
             text-align: center;
-            font-size: 1.5em;
+            font-size: 1.4em;
             font-weight: bold;
-            animation: pulse 1s infinite;
+            animation: pulse 1.5s infinite;
         }
         
         @keyframes pulse {
@@ -300,7 +326,7 @@
         
         .loading {
             display: inline-block;
-            margin-left: 10px;
+            margin-left: 8px;
         }
         
         .loading::after {
@@ -312,74 +338,107 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+        
+        /* Scrollbar styling */
+        .log-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .log-panel::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .log-panel::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        
+        .log-panel::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>⚛️ Quantum Go - ZidanAI</h1>
-            <p>Experience quantum-powered strategic gameplay on a 5x5 board</p>
+            <h1>⚛️ Quantum Go</h1>
+            <p>5x5 Go with Quantum-Powered AI Decision Making</p>
         </header>
         
-        <div class="main-content">
-            <!-- Control Panel -->
-            <div class="control-panel">
+        <div class="main-layout">
+            <!-- Left Panel: Controls -->
+            <div class="left-panel">
                 <div class="mode-selector">
-                    <h3>Select Game Mode</h3>
+                    <h3>Game Mode</h3>
                     <div class="mode-buttons">
-                        <button class="btn btn-mode" data-mode="A">Mode A<br><small>ZidanAI vs RuleBasedAI</small></button>
-                        <button class="btn btn-mode" data-mode="B">Mode B<br><small>Human vs ZidanAI</small></button>
+                        <button class="btn btn-mode" data-mode="A">
+                            Mode A<br><small>ZidanAI vs RuleBasedAI</small>
+                        </button>
+                        <button class="btn btn-mode" data-mode="B">
+                            Mode B<br><small>Human vs ZidanAI</small>
+                        </button>
                     </div>
                 </div>
                 
                 <button class="btn btn-primary" id="startBtn">Start New Game</button>
-                <button class="btn btn-secondary" id="nextTurnBtn" style="display: none;">Next Turn</button>
                 
                 <div class="status-panel">
                     <h3>Game Status</h3>
                     <div class="status-info">
                         <div><strong>Mode:</strong> <span id="currentMode">Not started</span></div>
                         <div><strong>Turn:</strong> <span id="turnCount">0</span> / 30</div>
-                        <div><strong>Current Player:</strong> <span id="currentPlayer">-</span></div>
-                        <div><strong>Status:</strong> <span id="gameStatus">Waiting to start</span></div>
+                        <div><strong>Current:</strong> <span id="currentPlayer">-</span></div>
+                        <div><strong>Status:</strong> <span id="gameStatus">Waiting</span></div>
                     </div>
                 </div>
-                
-                <div class="status-panel" style="margin-top: 20px;">
-                    <h3>Current Scores</h3>
-                    <div class="status-info" id="scoreDisplay">
-                        <div>Scores will appear here...</div>
-                    </div>
-                </div>
-            </div>
             </div>
             
-            <!-- Game Board -->
+            <!-- Center: Go Board -->
             <div class="board-container">
                 <h2>Game Board</h2>
-                <div class="board-wrapper">
-                    <div class="board" id="gameBoard">
-                        <!-- 5x5 grid will be generated by JavaScript -->
+                <div class="go-board-wrapper">
+                    <canvas id="goBoard" width="480" height="480"></canvas>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Scores -->
+            <div class="right-panel">
+                <div class="score-panel">
+                    <h3>Live Scores</h3>
+                    <div id="scoreDisplay">
+                        <p style="color: #999; font-size: 0.9em;">Scores will appear here...</p>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Game Log -->
-        <div class="log-panel">
-            <h2>Game Log</h2>
-            <div id="gameLog">
-                <p style="color: #999;">Game log will appear here...</p>
+            
+            <!-- Bottom: Game Log -->
+            <div class="log-section">
+                <h2>Game Log</h2>
+                <div class="log-panel" id="gameLog">
+                    <p style="color: #999;">Game history will appear here...</p>
+                </div>
             </div>
         </div>
     </div>
     
     <script>
+        // Game state
         let selectedMode = 'A';
         let gameStarted = false;
         let currentPlayer = null;
         let gameMode = null;
         let gameOver = false;
+        let boardState = null;
+        
+        // Canvas constants
+        const canvas = document.getElementById('goBoard');
+        const ctx = canvas.getContext('2d');
+        const BOARD_SIZE = 5;
+        const CANVAS_SIZE = 480;
+        const MARGIN = 60;
+        const GRID_SIZE = (CANVAS_SIZE - 2 * MARGIN) / (BOARD_SIZE - 1);
+        const STONE_RADIUS = GRID_SIZE * 0.4;
         
         // Mode selection
         document.querySelectorAll('.btn-mode').forEach(btn => {
@@ -389,6 +448,157 @@
                 btn.classList.add('active');
                 selectedMode = btn.dataset.mode;
             });
+        });
+        
+        // Draw empty Go board
+        function drawBoard() {
+            // Wood background
+            ctx.fillStyle = '#dcb35c';
+            ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            
+            // Grid lines
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1.5;
+            
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                const pos = MARGIN + i * GRID_SIZE;
+                
+                // Vertical lines
+                ctx.beginPath();
+                ctx.moveTo(pos, MARGIN);
+                ctx.lineTo(pos, CANVAS_SIZE - MARGIN);
+                ctx.stroke();
+                
+                // Horizontal lines
+                ctx.beginPath();
+                ctx.moveTo(MARGIN, pos);
+                ctx.lineTo(CANVAS_SIZE - MARGIN, pos);
+                ctx.stroke();
+            }
+            
+            // Star points (center)
+            ctx.fillStyle = '#000';
+            const centerX = MARGIN + 2 * GRID_SIZE;
+            const centerY = MARGIN + 2 * GRID_SIZE;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Draw stone at intersection
+        function drawStone(row, col, player) {
+            const x = MARGIN + col * GRID_SIZE;
+            const y = MARGIN + row * GRID_SIZE;
+            
+            // Shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.arc(x + 2, y + 2, STONE_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Stone
+            if (player === 1 || player === 'ZidanAI') {
+                // Black stone (ZidanAI)
+                const gradient = ctx.createRadialGradient(x - 10, y - 10, 5, x, y, STONE_RADIUS);
+                gradient.addColorStop(0, '#666');
+                gradient.addColorStop(1, '#000');
+                ctx.fillStyle = gradient;
+            } else if (player === 2 || player === 'RuleBasedAI') {
+                // White stone (RuleBasedAI)
+                const gradient = ctx.createRadialGradient(x - 10, y - 10, 5, x, y, STONE_RADIUS);
+                gradient.addColorStop(0, '#fff');
+                gradient.addColorStop(1, '#ddd');
+                ctx.fillStyle = gradient;
+            } else if (player === 3 || player === 'Human') {
+                // White stone (Human)
+                const gradient = ctx.createRadialGradient(x - 10, y - 10, 5, x, y, STONE_RADIUS);
+                gradient.addColorStop(0, '#fff');
+                gradient.addColorStop(1, '#e8e8e8');
+                ctx.fillStyle = gradient;
+            }
+            
+            ctx.beginPath();
+            ctx.arc(x, y, STONE_RADIUS, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Highlight
+            ctx.strokeStyle = player === 1 ? '#333' : '#ccc';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        
+        // Update board display
+        function updateBoard(board) {
+            boardState = board;
+            drawBoard();
+            
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (board[r][c] !== 0) {
+                        drawStone(r, c, board[r][c]);
+                    }
+                }
+            }
+        }
+        
+        // Get intersection from click
+        function getIntersection(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const col = Math.round((x - MARGIN) / GRID_SIZE);
+            const row = Math.round((y - MARGIN) / GRID_SIZE);
+            
+            if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
+                return { row, col };
+            }
+            return null;
+        }
+        
+        // Canvas click handler
+        canvas.addEventListener('click', async (e) => {
+            if (!gameStarted || gameOver || gameMode !== 'B' || currentPlayer !== 'Human') {
+                return;
+            }
+            
+            const intersection = getIntersection(e);
+            if (!intersection) return;
+            
+            const { row, col } = intersection;
+            
+            // Check if intersection is empty
+            if (boardState && boardState[row][col] !== 0) {
+                return;
+            }
+            
+            document.getElementById('gameStatus').textContent = 'Processing move...';
+            
+            try {
+                const response = await fetch('/play', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({row, col})
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    document.getElementById('gameStatus').textContent = 'Game in progress';
+                    return;
+                }
+                
+                updateBoard(data.board);
+                updateLog(data.game_log);
+                updateStatus(data);
+                
+                if (data.game_over) {
+                    gameOver = true;
+                }
+            } catch (error) {
+                alert('Error processing move: ' + error);
+            }
         });
         
         // Start game
@@ -418,137 +628,10 @@
                 updateBoard(data.board);
                 updateLog(data.game_log);
                 updateStatus(data);
-                
-                // Show next turn button for Mode A
-                if (data.mode === 'A') {
-                    document.getElementById('nextTurnBtn').style.display = 'block';
-                }
             } catch (error) {
                 alert('Error starting game: ' + error);
             }
         });
-        
-        // Next turn (Mode A auto-play)
-        document.getElementById('nextTurnBtn').addEventListener('click', async () => {
-            if (gameOver) return;
-            
-            document.getElementById('gameStatus').innerHTML = 'Processing turn...<span class="loading"></span>';
-            
-            try {
-                const response = await fetch('/play', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({})
-                });
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    alert('Error: ' + data.error);
-                    return;
-                }
-                
-                updateBoard(data.board);
-                updateLog(data.game_log);
-                updateStatus(data);
-                
-                if (data.game_over) {
-                    gameOver = true;
-                    document.getElementById('nextTurnBtn').style.display = 'none';
-                }
-            } catch (error) {
-                alert('Error processing turn: ' + error);
-            }
-        });
-        
-        // Initialize board
-        function initBoard() {
-            const board = document.getElementById('gameBoard');
-            board.innerHTML = '';
-            
-            for (let r = 0; r < 5; r++) {
-                for (let c = 0; c < 5; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.dataset.row = r;
-                    cell.dataset.col = c;
-                    cell.addEventListener('click', handleCellClick);
-                    board.appendChild(cell);
-                }
-            }
-        }
-        
-        // Handle cell click (Mode B human move)
-        async function handleCellClick(e) {
-            if (!gameStarted || gameOver || gameMode !== 'B' || currentPlayer !== 'Human') {
-                return;
-            }
-            
-            const row = parseInt(e.currentTarget.dataset.row);
-            const col = parseInt(e.currentTarget.dataset.col);
-            
-            document.getElementById('gameStatus').innerHTML = 'Processing move...<span class="loading"></span>';
-            
-            try {
-                const response = await fetch('/play', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({row, col})
-                });
-                
-                const data = await response.json();
-                
-                if (data.error) {
-                    alert('Error: ' + data.error);
-                    document.getElementById('gameStatus').textContent = 'Game in progress';
-                    return;
-                }
-                
-                updateBoard(data.board);
-                updateLog(data.game_log);
-                updateStatus(data);
-                
-                // Backend automatically plays ZidanAI after human move
-                // No need for separate API call
-                
-                if (data.game_over) {
-                    gameOver = true;
-                }
-            } catch (error) {
-                alert('Error processing move: ' + error);
-            }
-        }
-        
-        // Update board display
-        function updateBoard(boardData) {
-            const cells = document.querySelectorAll('.cell');
-            
-            for (let r = 0; r < 5; r++) {
-                for (let c = 0; c < 5; c++) {
-                    const cell = cells[r * 5 + c];
-                    cell.innerHTML = '';
-                    
-                    const value = boardData[r][c];
-                    
-                    if (value === 1) {
-                        const stone = document.createElement('div');
-                        stone.className = 'stone stone-zidan';
-                        stone.textContent = 'Z';
-                        cell.appendChild(stone);
-                    } else if (value === 2) {
-                        const stone = document.createElement('div');
-                        stone.className = 'stone stone-rules';
-                        stone.textContent = 'R';
-                        cell.appendChild(stone);
-                    } else if (value === 3) {
-                        const stone = document.createElement('div');
-                        stone.className = 'stone stone-human';
-                        stone.textContent = 'H';
-                        cell.appendChild(stone);
-                    }
-                }
-            }
-        }
         
         // Update game log
         function updateLog(logData) {
@@ -559,9 +642,8 @@
                 const entryDiv = document.createElement('div');
                 entryDiv.className = 'log-entry';
                 
-                if (entry.player === 'ZidanAI') entryDiv.classList.add('zidan');
-                if (entry.player === 'RuleBasedAI') entryDiv.classList.add('rules');
-                if (entry.player === 'Human') entryDiv.classList.add('human');
+                if (entry.player === 'ZidanAI') entryDiv.classList.add('black');
+                if (entry.player === 'RuleBasedAI' || entry.player === 'Human') entryDiv.classList.add('white');
                 
                 let html = `<div class="log-header">Turn ${entry.turn} - ${entry.player}</div>`;
                 html += `<div class="log-details">`;
@@ -578,7 +660,14 @@
                     html += `<div><strong>Rationale:</strong> ${entry.rationale}</div>`;
                 }
                 
-                // Quantum info for ZidanAI
+                // Capture notice
+                if (entry.captures && entry.captures.length > 0) {
+                    html += `<div class="capture-notice">🎯 Captured ${entry.captures.length} stone(s) at: `;
+                    html += entry.captures.map(([r, c]) => `(${r},${c})`).join(', ');
+                    html += `</div>`;
+                }
+                
+                // Quantum info
                 if (entry.classification) {
                     html += `<div class="quantum-info">`;
                     html += `<div><strong>🔮 Quantum Analysis:</strong></div>`;
@@ -596,7 +685,6 @@
                     
                     html += `</div>`;
                     
-                    // Quantum visualizations
                     if (entry.circuit_image || entry.histogram_image) {
                         html += `<div class="quantum-images">`;
                         if (entry.circuit_image) {
@@ -609,7 +697,7 @@
                     }
                 }
                 
-                // Scores after move
+                // Scores
                 if (entry.scores) {
                     html += `<div style="background: #f0f8ff; padding: 10px; margin-top: 10px; border-radius: 5px;">`;
                     html += `<div><strong>📊 Scores After Move:</strong></div>`;
@@ -624,7 +712,6 @@
                     html += `</div>`;
                 }
                 
-                // Board snapshot
                 if (entry.board) {
                     html += `<div class="board-snapshot">${entry.board}</div>`;
                 }
@@ -635,7 +722,6 @@
                 logDiv.appendChild(entryDiv);
             });
             
-            // Scroll to bottom
             logDiv.scrollTop = logDiv.scrollHeight;
         }
         
@@ -645,18 +731,19 @@
             document.getElementById('currentPlayer').textContent = data.current_player || '-';
             currentPlayer = data.current_player;
             
-            // Update scores display
+            // Update scores
             if (data.scores) {
                 const scoreDiv = document.getElementById('scoreDisplay');
                 let scoreHtml = '';
                 for (const [player, scoreData] of Object.entries(data.scores)) {
-                    const color = player === 'ZidanAI' ? '#4a90e2' : (player === 'Human' ? '#2ecc71' : '#e74c3c');
-                    scoreHtml += `<div style="margin-bottom: 10px; padding: 8px; background: white; border-radius: 5px; border-left: 4px solid ${color};">`;
-                    scoreHtml += `<div style="font-weight: bold; color: ${color};">${player}: ${scoreData.total} points</div>`;
-                    scoreHtml += `<div style="font-size: 0.85em; margin-top: 3px;">`;
-                    scoreHtml += `T: ${scoreData.territory}×2=${scoreData.territory*2} | `;
-                    scoreHtml += `L: ${scoreData.liberties} | `;
-                    scoreHtml += `C: ${scoreData.connectivity}×3=${scoreData.connectivity*3}`;
+                    const isBlack = player === 'ZidanAI';
+                    scoreHtml += `<div class="player-score ${isBlack ? 'black' : 'white'}">`;
+                    scoreHtml += `<div class="player-name">${player}</div>`;
+                    scoreHtml += `<div class="score-total">${scoreData.total} points</div>`;
+                    scoreHtml += `<div class="score-breakdown">`;
+                    scoreHtml += `Territory: ${scoreData.territory} × 2 = ${scoreData.territory*2}<br>`;
+                    scoreHtml += `Liberties: ${scoreData.liberties}<br>`;
+                    scoreHtml += `Connectivity: ${scoreData.connectivity} × 3 = ${scoreData.connectivity*3}`;
                     scoreHtml += `</div></div>`;
                 }
                 scoreDiv.innerHTML = scoreHtml;
@@ -664,14 +751,14 @@
             
             if (data.game_over) {
                 document.getElementById('gameStatus').innerHTML = 
-                    `<div class="winner-banner">🏆 Game Over! Winner: ${data.winner}</div>`;
+                    `<div class="winner-banner">🏆 Winner: ${data.winner}</div>`;
             } else {
                 document.getElementById('gameStatus').textContent = 'Game in progress';
             }
         }
         
         // Initialize
-        initBoard();
+        drawBoard();
         document.querySelector('.btn-mode[data-mode="A"]').classList.add('active');
     </script>
 </body>
