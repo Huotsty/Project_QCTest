@@ -10,3 +10,5 @@ qiskit
 qiskit-aer
 qiskit_ibm_runtime
 qiskit-ibm-runtime
+setuptools
+wheel
